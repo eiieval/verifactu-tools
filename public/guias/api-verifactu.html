@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API de VeriFactu: cómo elegir proveedor para integrar VeriFactu en tu software</title>
+  <meta name="description" content="Qué debe hacer una API de VeriFactu, qué implica la declaración responsable y qué criterios usar para elegir proveedor si desarrollas software de facturación o un ERP.">
+  <link rel="canonical" href="https://verifactu-tools.vercel.app/guias/api-verifactu">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"API de VeriFactu: cómo elegir proveedor","inLanguage":"es","dateModified":"2026-10-04","about":"VeriFactu"}</script>
+</head>
+<body class="bg-[#06070b] text-slate-100 min-h-screen">
+  <nav class="site-nav"><a href="/" class="font-bold">Herramientas VeriFactu</a><a href="/guias/huella-verifactu">Huella</a><a href="/guias/api-verifactu">APIs</a><a href="/guias/programa-facturacion-verifactu">Programas</a></nav>
+  <main class="doc">
+    <h1>API de VeriFactu: cómo elegir proveedor</h1>
+    <p class="lead">Si tu empresa desarrolla software de facturación o un ERP, tienes dos caminos: implementar VeriFactu desde cero o integrar una API especializada. Las sociedades estarán obligadas desde el 1 de enero de 2027 y el resto de contribuyentes desde el 1 de julio de 2027, así que el tiempo cuenta.</p>
+
+    <h2>Qué hace una API de VeriFactu</h2>
+    <ul>
+      <li>Genera el registro de facturación de alta o anulación a partir de los datos de la factura.</li>
+      <li>Calcula la huella SHA-256 y la encadena con el registro anterior.</li>
+      <li>Devuelve el código QR con la URL de cotejo de la AEAT.</li>
+      <li>Construye el XML y lo envía a la AEAT, a menudo con su propio certificado como colaborador social, para que tus clientes no tengan que gestionar certificados.</li>
+      <li>Ofrece un entorno de pruebas y avisos del estado de cada envío.</li>
+    </ul>
+
+    <h2>La declaración responsable no se delega</h2>
+    <p>Integrar una API no exime a tu software de sus obligaciones. El fabricante del sistema de facturación debe firmar su propia declaración responsable, y el proveedor de la API firma la suya. Las sanciones para fabricantes de sistemas no conformes llegan a 150.000 € por ejercicio, según el artículo 201 bis de la Ley General Tributaria. Antes de elegir, revisa qué cubre exactamente el proveedor.</p>
+
+    <h2>Criterios para elegir</h2>
+    <ul>
+      <li><b>Precio.</b> La mayoría cobra por NIF y mes. Calcula el coste con el número de clientes que tendrás.</li>
+      <li><b>Entorno de pruebas gratuito</b>, para integrar sin pagar desde el primer día.</li>
+      <li><b>Cobertura.</b> TicketBAI si tienes clientes en el País Vasco, y factura electrónica B2B y Peppol para las obligaciones de 2027 y 2028.</li>
+      <li><b>Integración.</b> SDKs para tu lenguaje, webhooks y buena documentación.</li>
+      <li><b>Seguridad.</b> Certificaciones como ISO 27001 o el Esquema Nacional de Seguridad.</li>
+    </ul>
+
+    <h2>Proveedores</h2>
+    <p>Datos públicos de cada proveedor a 4 de octubre de 2026. Consulta siempre sus condiciones actualizadas.</p>
+    <ul>
+      <li><b><a data-aff="b2brouter" href="https://www.b2brouter.net/es/api-verifactu/">B2Brouter</a>.</b> API para ERP y SaaS con SDKs, webhooks y claves de prueba y producción. Es punto de acceso Peppol y declara certificaciones ISO 27001 y ENS.</li>
+      <li><b><a href="https://www.verifacti.com/">Verifacti</a>.</b> API REST con empresa de prueba gratuita. Envía a la AEAT con su propio certificado como colaborador social y también cubre TicketBAI.</li>
+      <li><b><a href="https://www.storecove.com/us/en/verifactu/">Storecove</a>.</b> Plataforma internacional de facturación electrónica con soporte para VeriFactu.</li>
+    </ul>
+    <p class="note">Si un enlace aparece marcado como "enlace de afiliado", podemos recibir una comisión si contratas a través de él, sin coste para ti. El orden y el contenido de esta guía no dependen de ello.</p>
+
+    <h2>Antes de integrar</h2>
+    <p>Comprueba tus cálculos con el <a href="/">validador gratuito</a>: huella, encadenamiento de registros y QR, sin enviar datos a ningún servidor. Y repasa los <a href="/guias/huella-verifactu">errores más frecuentes de la huella</a>.</p>
+    <p class="note">Guía orientativa; no constituye asesoramiento legal. Actualizada el 4 de octubre de 2026. <a href="/aviso-legal">Aviso legal</a>.</p>
+  </main>
+  <script type="module" src="/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Huella VeriFactu: cómo se calcula el hash SHA-256, con el ejemplo oficial de la AEAT</title>
+  <meta name="description" content="Campos, orden y formato exactos de la huella SHA-256 de VeriFactu para registros de alta y anulación, con el ejemplo oficial de la AEAT, código en JavaScript, Python y PHP y los errores más frecuentes.">
+  <link rel="canonical" href="https://verifactu-tools.vercel.app/guias/huella-verifactu">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Huella VeriFactu: cómo se calcula el hash SHA-256","inLanguage":"es","dateModified":"2026-10-04","about":"VeriFactu"}</script>
+</head>
+<body class="bg-[#06070b] text-slate-100 min-h-screen">
+  <nav class="site-nav"><a href="/" class="font-bold">Herramientas VeriFactu</a><a href="/guias/huella-verifactu">Huella</a><a href="/guias/api-verifactu">APIs</a><a href="/guias/programa-facturacion-verifactu">Programas</a></nav>
+  <main class="doc">
+    <h1>Huella VeriFactu: cómo se calcula el hash SHA-256</h1>
+    <p class="lead">Cada registro de facturación de VeriFactu lleva una huella: un hash SHA-256 que encadena el registro con el anterior. Si un solo carácter difiere del formato que espera la AEAT, la huella no coincide. Esta guía resume el cálculo exacto y los errores que más se repiten.</p>
+
+    <h2>Campos y orden de un registro de alta</h2>
+    <p>Se concatenan estos campos con el formato <code>nombre=valor</code>, separados por <code>&amp;</code>, en este orden exacto:</p>
+    <ol>
+      <li><code>IDEmisorFactura</code>: NIF del emisor.</li>
+      <li><code>NumSerieFactura</code>: número y serie de la factura.</li>
+      <li><code>FechaExpedicionFactura</code>: fecha con formato dd-mm-aaaa.</li>
+      <li><code>TipoFactura</code>: por ejemplo F1, F2 o R1.</li>
+      <li><code>CuotaTotal</code> e <code>ImporteTotal</code>: tal y como figuran en el registro, con punto decimal.</li>
+      <li><code>Huella</code>: la huella del registro anterior, o vacío si es el primero.</li>
+      <li><code>FechaHoraHusoGenRegistro</code>: fecha, hora y huso, por ejemplo 2024-01-01T19:20:30+01:00.</li>
+    </ol>
+    <p>Los valores se usan sin espacios al principio ni al final. El resultado es el SHA-256 de la cadena en UTF-8, expresado en hexadecimal en mayúsculas.</p>
+
+    <h2>Ejemplo oficial de la AEAT</h2>
+    <pre>IDEmisorFactura=89890001K&amp;NumSerieFactura=12345678/G33&amp;FechaExpedicionFactura=01-01-2024&amp;TipoFactura=F1&amp;CuotaTotal=12.35&amp;ImporteTotal=123.45&amp;Huella=&amp;FechaHoraHusoGenRegistro=2024-01-01T19:20:30+01:00</pre>
+    <p>Huella resultante:</p>
+    <pre>3C464DAF61ACB827C65FDA19F352A4E3BDC2C640E9E9FC4CC058073F38F12F60</pre>
+    <p>Puedes reproducirlo con un clic en el <a href="/">validador</a>.</p>
+
+    <h2>Registro de anulación</h2>
+    <p>La anulación usa otros campos, en este orden: <code>IDEmisorFacturaAnulada</code>, <code>NumSerieFacturaAnulada</code>, <code>FechaExpedicionFacturaAnulada</code>, <code>Huella</code> y <code>FechaHoraHusoGenRegistro</code>.</p>
+
+    <h2>Código</h2>
+    <p>JavaScript con Node.js:</p>
+    <pre>import { createHash } from 'node:crypto';
+const cadena = `IDEmisorFactura=${nif}&amp;NumSerieFactura=${numero}&amp;FechaExpedicionFactura=${fecha}&amp;TipoFactura=${tipo}&amp;CuotaTotal=${cuota}&amp;ImporteTotal=${importe}&amp;Huella=${huellaAnterior}&amp;FechaHoraHusoGenRegistro=${fechaHora}`;
+const huella = createHash('sha256').update(cadena, 'utf8').digest('hex').toUpperCase();</pre>
+    <p>Python:</p>
+    <pre>import hashlib
+cadena = f"IDEmisorFactura={nif}&amp;NumSerieFactura={numero}&amp;FechaExpedicionFactura={fecha}&amp;TipoFactura={tipo}&amp;CuotaTotal={cuota}&amp;ImporteTotal={importe}&amp;Huella={huella_anterior}&amp;FechaHoraHusoGenRegistro={fecha_hora}"
+huella = hashlib.sha256(cadena.encode("utf-8")).hexdigest().upper()</pre>
+    <p>PHP:</p>
+    <pre>$cadena = "IDEmisorFactura={$nif}&amp;NumSerieFactura={$numero}&amp;FechaExpedicionFactura={$fecha}&amp;TipoFactura={$tipo}&amp;CuotaTotal={$cuota}&amp;ImporteTotal={$importe}&amp;Huella={$huellaAnterior}&amp;FechaHoraHusoGenRegistro={$fechaHora}";
+$huella = strtoupper(hash('sha256', $cadena));</pre>
+
+    <h2>Errores frecuentes</h2>
+    <ul>
+      <li><b>Importes con otro formato.</b> Si el XML lleva 12.3 y la huella se calculó con 12.30, no coinciden. Usa exactamente el mismo texto en los dos sitios.</li>
+      <li><b>Fecha en formato ISO.</b> La fecha de expedición va como dd-mm-aaaa, no como aaaa-mm-dd.</li>
+      <li><b>Huso horario mal escrito.</b> El huso lleva dos puntos, como +01:00. Escribir +0100 o Z cambia la huella.</li>
+      <li><b>Huella anterior alterada.</b> Debe ir completa y en mayúsculas, tal y como se calculó.</li>
+      <li><b>Comas decimales o espacios.</b> Cualquier carácter de más cambia el resultado.</li>
+    </ul>
+    <p>El <a href="/">validador</a> detecta estos errores automáticamente: pega tus datos y la huella esperada y te dirá qué campo falla.</p>
+
+    <div class="callout">¿Prefieres no implementar la huella, el QR y el envío a la AEAT por tu cuenta? Compara las <a href="/guias/api-verifactu">APIs de VeriFactu para desarrolladores</a>.</div>
+    <p class="note">Guía orientativa basada en las especificaciones técnicas publicadas por la AEAT. Actualizada el 4 de octubre de 2026. <a href="/aviso-legal">Aviso legal</a>.</p>
+  </main>
+  <script type="module" src="/js/site.js"></script>
+</body>
+</html>

@@ -7,10 +7,13 @@
   <meta name="description" content="Herramienta gratuita y open source para desarrolladores: calcula la huella SHA-256 de VeriFactu, descubre por qué no coincide, valida la cadena de registros XML y genera el código QR de la AEAT. Todo en tu navegador.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="canonical" href="https://verifactu-tools.vercel.app/">
   <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Herramientas VeriFactu","applicationCategory":"DeveloperApplication","operatingSystem":"Web","inLanguage":"es","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}</script>
   <script src="/vendor/qrcode/qrcode.js"></script>
 </head>
 <body class="bg-[#06070b] text-slate-100 min-h-screen">
+  <nav class="site-nav"><a href="/" class="font-bold">Herramientas VeriFactu</a><a href="/guias/huella-verifactu">Huella</a><a href="/guias/api-verifactu">APIs</a><a href="/guias/programa-facturacion-verifactu">Programas</a></nav>
   <main class="max-w-5xl mx-auto px-4 py-8">
     <header>
       <div class="text-xs uppercase tracking-widest text-emerald-300/80">Herramientas VeriFactu · gratis y open source</div>
@@ -70,8 +73,15 @@
       <div id="q-checks" class="mt-3 text-sm"></div>
     </section>
 
-    <footer class="mt-10 text-xs leading-relaxed text-slate-500">Basado en las especificaciones técnicas publicadas por la AEAT para el RD 1007/2023 y la Orden HAC/1177/2024. Herramienta orientativa: no sustituye a la validación del servicio web de la AEAT. Código abierto en <a class="underline" href="https://github.com/eiieval/verifactu-tools" rel="noopener noreferrer">GitHub</a>.</footer>
+    <section class="mt-8 grid gap-3 md:grid-cols-3">
+      <a href="/guias/huella-verifactu" class="glass rounded-2xl p-4 hover:border-white/30"><div class="text-sm font-semibold">Cómo se calcula la huella</div><div class="mt-1 text-xs text-slate-400">Campos, orden y formato, con código en JavaScript, Python y PHP y los errores más frecuentes.</div></a>
+      <a href="/guias/api-verifactu" class="glass rounded-2xl p-4 hover:border-white/30"><div class="text-sm font-semibold">API de VeriFactu: cómo elegir</div><div class="mt-1 text-xs text-slate-400">Qué debe hacer una API, la declaración responsable y criterios para elegir proveedor.</div></a>
+      <a href="/guias/programa-facturacion-verifactu" class="glass rounded-2xl p-4 hover:border-white/30"><div class="text-sm font-semibold">Programa de facturación para autónomos y pymes</div><div class="mt-1 text-xs text-slate-400">Plazos de 2027, requisitos, sanciones y cómo elegir un programa adaptado.</div></a>
+    </section>
+
+    <footer class="mt-10 text-xs leading-relaxed text-slate-500">Basado en las especificaciones técnicas publicadas por la AEAT para el RD 1007/2023 y la Orden HAC/1177/2024. Herramienta orientativa: no sustituye a la validación del servicio web de la AEAT. Código abierto en <a class="underline" href="https://github.com/eiieval/verifactu-tools" rel="noopener noreferrer">GitHub</a>. <a class="underline" href="/aviso-legal">Aviso legal y privacidad</a>.</footer>
   </main>
   <script type="module" src="/app.js"></script>
+  <script type="module" src="/js/site.js"></script>
 </body>
 </html>

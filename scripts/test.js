@@ -36,5 +36,30 @@ expect('QR link encodes the series and passes every check', link.includes('numse
 expect('QR check flags a wrong date format', checkQrUrl(link.replace('01-01-2024', '2024-01-01')).some((c) => !c.ok));
 expect('XML special characters survive the round trip', parseRecords(altaXml({ ...recs[0], number: 'A&B-1' }))[0].number === 'A&B-1' && altaHashInput(parsed[0]).includes('IDEmisorFactura=B76543214'));
 
+// Affiliate links: only with a complete legal notice and a plain https URL.
+const { affiliateHref } = await import('../public/js/affiliate.js');
+const legalOk = { name: 'Titular', nif: '00000000T', address: 'Calle 1', email: 'a@b.es' };
+expect('affiliate links stay off until the legal notice is complete', affiliateHref('quipu', { quipu: 'https://ref.example/q' }, { ...legalOk, nif: '' }) === null);
+expect('affiliate links turn on only for https URLs with a complete legal notice', affiliateHref('quipu', { quipu: 'https://ref.example/q' }, legalOk) === 'https://ref.example/q' && affiliateHref('quipu', { quipu: 'javascript:alert(1)' }, legalOk) === null);
+
+// Pages: SEO basics, no inline executable scripts (strict CSP) and no broken internal links.
+const { readFileSync, readdirSync, existsSync } = await import('node:fs');
+const pub = (p) => new URL(`../public/${p}`, import.meta.url);
+const pages = ['index.html', 'aviso-legal.html', ...readdirSync(pub('guias/')).map((f) => `guias/${f}`)];
+const resolveLink = (href) => {
+  const clean = href.split(/[?#]/)[0].replace(/^\//, '');
+  if (!clean) return 'index.html';
+  return /\.[a-z0-9]+$/i.test(clean) ? clean : `${clean}.html`;
+};
+let pagesOk = true;
+for (const p of pages) {
+  const html = readFileSync(pub(p), 'utf8');
+  const ok = /<title>[^<]{20,}<\/title>/.test(html) && /<meta name="description" content="[^"]{60,}"/.test(html) && /<link rel="canonical" href="https:\/\/verifactu-tools\.vercel\.app\//.test(html)
+    && !/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/i.test(html)
+    && [...html.matchAll(/(?:href|src)="(\/[^"]*)"/g)].every(([, h]) => existsSync(pub(resolveLink(h))));
+  if (!ok) { pagesOk = false; console.log(`  page problem: ${p}`); }
+}
+expect(`${pages.length} pages have title, description, canonical, no inline scripts and no broken links`, pagesOk);
+
 console.log(failed ? `${failed} check(s) failed` : 'all checks passed');
 process.exit(failed ? 1 : 0);

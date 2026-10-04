@@ -13,9 +13,11 @@ const port = Number(process.env.PORT) || 3000;
 http.createServer(async (req, res) => {
   const path = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html';
   if (path.includes('..')) { res.writeHead(400); return res.end(); }
+  // Same clean URLs as production: /guias/x serves /guias/x.html.
+  const file = extname(path) ? path : `${path}.html`;
   try {
-    const buf = await readFile(join(PUBLIC, path));
-    res.writeHead(200, { ...SECURITY, 'content-type': TYPES[extname(path)] || 'application/octet-stream' });
+    const buf = await readFile(join(PUBLIC, file));
+    res.writeHead(200, { ...SECURITY, 'content-type': TYPES[extname(file)] || 'application/octet-stream' });
     res.end(buf);
   } catch {
     res.writeHead(404);
