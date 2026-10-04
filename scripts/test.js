@@ -56,7 +56,7 @@ for (const p of pages) {
   const html = readFileSync(pub(p), 'utf8');
   const ok = /<title>[^<]{20,}<\/title>/.test(html) && /<meta name="description" content="[^"]{60,}"/.test(html) && /<link rel="canonical" href="https:\/\/verifactu-tools\.vercel\.app\//.test(html)
     && !/<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/i.test(html)
-    && [...html.matchAll(/(?:href|src)="(\/[^"]*)"/g)].every(([, h]) => existsSync(pub(resolveLink(h))));
+    && [...html.matchAll(/(?:href|src)="(\/[^"]*)"/g)].every(([, h]) => h.startsWith('/_vercel/') || existsSync(pub(resolveLink(h))));
   if (!ok) { pagesOk = false; console.log(`  page problem: ${p}`); }
 }
 expect(`${pages.length} pages have title, description, canonical, no inline scripts and no broken links`, pagesOk);
