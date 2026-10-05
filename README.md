@@ -10,6 +10,10 @@ Herramientas gratuitas y open source para desarrolladores que integran VeriFactu
 - **Registros XML.** Pega uno o varios RegistroAlta o RegistroAnulacion y comprueba la huella de cada uno y el encadenamiento entre ellos.
 - **Código QR.** Genera la URL y el QR del servicio de cotejo de la AEAT, en producción o pruebas, VERI*FACTU o no, y valida una URL existente.
 
+## Benchmark para modelos de IA
+
+[`kaggle-bench/`](kaggle-bench/) mide si un modelo de lenguaje sabe seguir la especificación de la huella: construir el texto exacto, calcularla con una herramienta SHA-256, admitir cuando no puede y encontrar el registro manipulado de una cadena. Se corrige por código y está anclado a los vectores oficiales de la AEAT. Se publica como [Kaggle Benchmark](https://www.kaggle.com/benchmarks).
+
 ## Uso local
 
 ```bash
