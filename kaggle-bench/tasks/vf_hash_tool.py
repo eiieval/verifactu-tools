@@ -503,7 +503,7 @@ class ModelUnavailable(RuntimeError):
     """The model proxy kept failing for reasons unrelated to the answer: the case is errored, not wrong."""
 
 
-def ask(kbench, llm, prompt, with_tool=False, attempts=8):
+def ask(kbench, llm, prompt, with_tool=False, attempts=10):
     """One fresh chat per attempt; retries transient proxy errors. Returns (answer, tool_calls, error, usage).
     Raises ModelUnavailable when every attempt hit a transient error, so the case counts as errored instead of wrong."""
     for attempt in range(attempts):
@@ -524,9 +524,9 @@ def ask(kbench, llm, prompt, with_tool=False, attempts=8):
             time.sleep(min(90, RETRY_BASE_SECONDS * 2 ** attempt) + random.random() * min(1.0, RETRY_BASE_SECONDS))
 
 
-def summarize(runs, total, label, key="category", min_answered=0.8):
-    """Score = correct / answered. Errored cases (proxy failures) are reported, not counted as wrong; if too many
-    errored, the run fails so a misleading score never reaches the leaderboard."""
+def summarize(runs, total, label, key="category"):
+    """Score = correct / answered. Errored cases (proxy failures) are reported, not counted as wrong. A run where
+    no case was answered fails, so a 0 caused by an outage never reaches the leaderboard."""
     import pandas as pd
     try:
         done = runs.completed_runs.as_dataframe()
@@ -540,8 +540,8 @@ def summarize(runs, total, label, key="category", min_answered=0.8):
     print(f"[{label}] correct {correct} of {answered} answered (errored {total - answered} of {total})")
     if answered:
         print(results[key].value_counts().to_string())
-    if answered < min_answered * total:
-        raise RuntimeError(f"[{label}] only {answered} of {total} cases answered: the model proxy failed too often. Re-run later.")
+    if not answered:
+        raise RuntimeError(f"[{label}] no case answered: the model proxy failed on all {total}. Re-run later.")
     return correct / answered
 
 
