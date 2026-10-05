@@ -3,6 +3,7 @@
 # the classic mistakes (copies the payload's key order, invents a hash without calling the tool, misses tampering).
 # Usage: python3 mock_proxy.py 8765   then   MODEL_PROXY_URL=http://127.0.0.1:8765 MODEL_PROXY_API_KEY=x LLM_DEFAULT=mock-good python3 vf_hash_tool.py
 import json
+import zlib
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -52,7 +53,17 @@ def reply(model, messages):
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):  # noqa: N802
         body = json.loads(self.rfile.read(int(self.headers["content-length"])))
-        msg = reply(body["model"], body["messages"])
+        # "mock-busy" is always overloaded; "mock-flaky" is overloaded for about 1 case in 10 (same cases every time).
+        last = text_of(body["messages"][-1]) if body["messages"] else ""
+        if body["model"] == "mock-busy" or (body["model"] == "mock-flaky" and zlib.crc32(last.encode()) % 10 == 0):
+            data = json.dumps({"error": {"message": "The model is currently experiencing heavy load.", "type": "rate_limit_error", "code": ""}}).encode()
+            self.send_response(429)
+            self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        msg = reply("mock-good" if body["model"] == "mock-flaky" else body["model"], body["messages"])
         out = {
             "id": "mock", "object": "chat.completion", "created": 0, "model": body["model"],
             "choices": [{"index": 0, "finish_reason": "tool_calls" if msg.get("tool_calls") else "stop", "message": {"role": "assistant", **msg}}],

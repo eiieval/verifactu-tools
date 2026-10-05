@@ -496,8 +496,17 @@ def make_sha_tool(log):
     return sha256_hex
 
 
-def ask(kbench, llm, prompt, with_tool=False, attempts=6):
-    """One fresh chat per attempt; retries only the model proxy's rate limits. Returns (answer, tool_calls, error, usage)."""
+RETRY_BASE_SECONDS = float(os.environ.get("VF_RETRY_BASE_SECONDS", "5"))  # tests lower it to run fast
+TRANSIENT_ERRORS = {"RateLimitError", "APIConnectionError", "APITimeoutError", "InternalServerError", "ServiceUnavailableError"}
+
+
+class ModelUnavailable(RuntimeError):
+    """The model proxy kept failing for reasons unrelated to the answer: the case is errored, not wrong."""
+
+
+def ask(kbench, llm, prompt, with_tool=False, attempts=8):
+    """One fresh chat per attempt; retries transient proxy errors. Returns (answer, tool_calls, error, usage).
+    Raises ModelUnavailable when every attempt hit a transient error, so the case counts as errored instead of wrong."""
     for attempt in range(attempts):
         log, chat = [], None
         kw = {"extra_api_params": {"max_completion_tokens": MAX_OUTPUT_TOKENS}}
@@ -508,23 +517,33 @@ def ask(kbench, llm, prompt, with_tool=False, attempts=6):
                 answer = llm.prompt(prompt, **kw)
                 return answer, log, "", usage_of(chat)
         except Exception as e:  # noqa: BLE001
-            is_rate_limit = type(e).__name__ == "RateLimitError"
-            if not is_rate_limit or attempt == attempts - 1:
-                return None, log, f"{type(e).__name__}: {str(e)[:300]}", usage_of(chat)
-            time.sleep(min(60, 5 * 2 ** attempt) + random.random())
+            name = type(e).__name__
+            if name not in TRANSIENT_ERRORS:
+                return None, log, f"{name}: {str(e)[:300]}", usage_of(chat)
+            if attempt == attempts - 1:
+                raise ModelUnavailable(f"{name} after {attempts} attempts: {str(e)[:200]}") from e
+            time.sleep(min(90, RETRY_BASE_SECONDS * 2 ** attempt) + random.random() * min(1.0, RETRY_BASE_SECONDS))
 
 
-def summarize(runs, total, label, key="category"):
+def summarize(runs, total, label, key="category", min_answered=0.8):
+    """Score = correct / answered. Errored cases (proxy failures) are reported, not counted as wrong; if too many
+    errored, the run fails so a misleading score never reaches the leaderboard."""
     import pandas as pd
-    done = runs.completed_runs.as_dataframe()
+    try:
+        done = runs.completed_runs.as_dataframe()
+    except KeyError:  # kaggle_benchmarks cannot build the frame when no case completed
+        done = []
     results = pd.DataFrame(list(done["result"])) if len(done) else pd.DataFrame(columns=["case_id", key, "correct"])
     os.makedirs(OUT_DIR, exist_ok=True)
     results.to_json(f"{OUT_DIR}/rows-{label}.json", orient="records")
-    correct = int(results["correct"].sum()) if len(results) else 0
-    print(f"[{label}] correct {correct} of {total} (errored {total - len(results)})")
-    if len(results):
+    answered = len(results)
+    correct = int(results["correct"].sum()) if answered else 0
+    print(f"[{label}] correct {correct} of {answered} answered (errored {total - answered} of {total})")
+    if answered:
         print(results[key].value_counts().to_string())
-    return correct / total
+    if answered < min_answered * total:
+        raise RuntimeError(f"[{label}] only {answered} of {total} cases answered: the model proxy failed too often. Re-run later.")
+    return correct / answered
 
 
 RECORD_ROWS = build_record_rows()
