@@ -129,3 +129,5 @@ For anyone using an assistant to write compliance code, the lesson is practical.
 <!-- FILL: benchmark URL again and the four task links. -->
 
 The tasks, graders, local checks and a mock model proxy for running everything offline are in [eiieval/verifactu-tools/kaggle-bench](https://github.com/eiieval/verifactu-tools/tree/main/kaggle-bench).
+
+*AI disclosure: the benchmark code and this post were written with an AI coding assistant (Claude Code), which is why it appears as co-author in the repository's commits. Every number above comes from the Kaggle run logs and can be reproduced from the repository.*
